@@ -147,6 +147,23 @@ async def list_tools():
             }
         ),
 
+
+        # tool 6 - get valid accession types for search queries
+        # useful when searching by specific accession format
+        Tool(
+            name="get_accession_types",
+            description=(
+                "Get all valid accession types that can be used in ENA search queries. "
+                "Returns formats like PRJEB, SRS, ERR, SRR. Use this to validate "
+                "accession numbers before searching."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        ),
+
     ]
 
 
@@ -272,10 +289,30 @@ async def call_tool(name: str, arguments: dict):
             return [TextContent(type="text",
                 text=f"ENA API error {response.status_code}: {response.text}")]
 
+
+    # tool 6 - get valid accession types from ENA
+    elif name == "get_accession_types":
+
+        # returns all accession formats ENA recognises e.g. PRJEB, ERR, SRS
+        response = requests.get(
+            f"{BASE_URL}/accessionTypes",
+            params={
+                "dataPortal": "ena",
+                "format": "json"
+            },
+            timeout=15
+        )
+
+        if response.status_code == 200 and response.text.strip():
+            return [TextContent(type="text", text=json.dumps(response.json(), indent=2))]
+        else:
+            return [TextContent(type="text",
+                text=f"ENA API error {response.status_code}: {response.text}")]
+
     # unknown tool
     else:
         return [TextContent(type="text",
-            text=f"unknown tool: {name}. available: search_ena, count_ena, get_searchable_fields, get_return_fields, get_result_types")]
+            text=f"unknown tool: {name}. available: search_ena, count_ena, get_searchable_fields, get_return_fields, get_result_types, get_accession_types")]
 
 
 # server startup
