@@ -164,6 +164,34 @@ async def list_tools():
             }
         ),
 
+
+        # tool 7 - get valid values for a specific ENA field
+        # stops the AI guessing field values like instrument_platform
+        Tool(
+            name="get_controlled_vocab",
+            description=(
+                "Get valid values for a controlled vocabulary field in ENA. "
+                "For example, pass instrument_platform to get valid options "
+                "like ILLUMINA, OXFORD_NANOPORE, PACBIO_SMRT. "
+                "Use this before searching to avoid invalid field values."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "field": {
+                        "type": "string",
+                        "description": "Field name to get valid values for e.g. instrument_platform"
+                    },
+                    "result_type": {
+                        "type": "string",
+                        "description": "Data type: sample, read_run, or study",
+                        "default": "read_run"
+                    }
+                },
+                "required": ["field"]
+            }
+        ),
+
     ]
 
 
@@ -309,10 +337,36 @@ async def call_tool(name: str, arguments: dict):
             return [TextContent(type="text",
                 text=f"ENA API error {response.status_code}: {response.text}")]
 
+
+    # tool 7 - get valid values for a controlled vocab field
+    elif name == "get_controlled_vocab":
+
+        field = arguments["field"]
+        result_type = arguments.get("result_type", "read_run")
+
+        # returns all accepted values for a given field
+        # e.g. instrument_platform -> ILLUMINA, OXFORD_NANOPORE etc.
+        response = requests.get(
+            f"{BASE_URL}/controlledVocab",
+            params={
+                "field": field,
+                "result": result_type,
+                "dataPortal": "ena",
+                "format": "json"
+            },
+            timeout=15
+        )
+
+        if response.status_code == 200 and response.text.strip():
+            return [TextContent(type="text", text=json.dumps(response.json(), indent=2))]
+        else:
+            return [TextContent(type="text",
+                text=f"no controlled vocab found for field: {field}")]
+
     # unknown tool
     else:
         return [TextContent(type="text",
-            text=f"unknown tool: {name}. available: search_ena, count_ena, get_searchable_fields, get_return_fields, get_result_types, get_accession_types")]
+            text=f"unknown tool: {name}. available: search_ena, count_ena, get_searchable_fields, get_return_fields, get_result_types, get_accession_types, get_controlled_vocab")]
 
 
 # server startup
