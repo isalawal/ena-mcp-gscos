@@ -130,6 +130,23 @@ async def list_tools():
             }
         ),
 
+
+        # tool 5 - list all data types in ENA
+        # good starting point before any search
+        Tool(
+            name="get_result_types",
+            description=(
+                "Get all available result types in ENA. "
+                "Call this first to understand what kinds of data exist "
+                "before searching. Returns types like sample, read_run, study, assembly."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        ),
+
     ]
 
 
@@ -235,10 +252,30 @@ async def call_tool(name: str, arguments: dict):
             return [TextContent(type="text",
                 text=f"empty response from ENA for result_type: {result_type}")]
 
+
+    # tool 5 - get all result types from ENA
+    elif name == "get_result_types":
+
+        # no query needed, just returns everything ENA has
+        response = requests.get(
+            f"{BASE_URL}/results",
+            params={
+                "dataPortal": "ena",
+                "format": "json"
+            },
+            timeout=15
+        )
+
+        if response.status_code == 200 and response.text.strip():
+            return [TextContent(type="text", text=json.dumps(response.json(), indent=2))]
+        else:
+            return [TextContent(type="text",
+                text=f"ENA API error {response.status_code}: {response.text}")]
+
     # unknown tool
     else:
         return [TextContent(type="text",
-            text=f"unknown tool: {name}. available: search_ena, count_ena, get_searchable_fields, get_return_fields")]
+            text=f"unknown tool: {name}. available: search_ena, count_ena, get_searchable_fields, get_return_fields, get_result_types")]
 
 
 # server startup
