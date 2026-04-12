@@ -8,6 +8,17 @@ Built as a GSoC 2026 proof of concept for EMBL-EBI.
 
 Prevents AI hallucination by forcing AI agents to fetch real verified data from ENA before responding. The agent cannot invent genomic records because every response is fetched from ENA in real time.
 
+## Features
+
+- 7 working MCP tools covering core ENA endpoints
+- Input validation on all tools
+- Caching layer repeated queries return from memory for 5 minutes
+- Rate limiting max 5 requests per second to avoid hitting ENA limits
+- Error handling network failures return clean messages instead of crashing
+- Logging every tool call and ENA request recorded with a timestamp
+- Docker support run anywhere with a single command
+- 7 pytest tests all passing
+
 ## Tools
 
 | Tool | Endpoint | Description |
@@ -22,12 +33,16 @@ Prevents AI hallucination by forcing AI agents to fetch real verified data from 
 
 ## Setup
 
-pip install mcp requests
+pip install -r requirements.txt
 python server.py
+
+## Run with Docker
+
+docker build -t ena-mcp-server .
+docker run ena-mcp-server
 
 ## Run tests
 
-pip install pytest
 pytest test_server.py -v
 
 ## Example queries
@@ -36,8 +51,17 @@ Search for human samples: tax_eq(9606), result_type: sample
 Count mouse sequencing runs: tax_eq(10090), result_type: read_run
 Get valid instrument platforms: field: instrument_platform
 
+## Project structure
+
+ena_search.py proof of concept ENA API client
+server.py production MCP server with 7 tools
+test_server.py pytest test suite
+Dockerfile container setup
+requirements.txt dependencies
+
 ## Built for
 
 Google Summer of Code 2026 - EMBL-EBI
 Project: Expose a Subset of ENA REST Services as MCP
 Mentor: Senthilnathan Vijayaraja
+GitHub: https://github.com/isalawal/ena-mcp-gscos
