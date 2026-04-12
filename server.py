@@ -210,6 +210,19 @@ async def call_tool(name: str, arguments: dict):
         result_type = arguments.get("result_type", "sample")
         limit = arguments.get("limit", 5)
 
+        # reject empty queries before hitting the API
+        if not query or not query.strip():
+            return [TextContent(type="text", text="error: query cannot be empty")]
+
+        # reject invalid result types
+        valid = ["sample", "read_run", "study", "experiment", "assembly"]
+        if result_type not in valid:
+            return [TextContent(type="text",
+                text=f"error: invalid result_type. valid options: {valid}")]
+
+        # keep limit within bounds
+        limit = max(1, min(limit, 100))
+
         # call the real ENA search endpoint
         response = requests.get(
             f"{BASE_URL}/search",
@@ -233,6 +246,16 @@ async def call_tool(name: str, arguments: dict):
     elif name == "count_ena":
         query = arguments["query"]
         result_type = arguments.get("result_type", "read_run")
+
+        # reject empty queries
+        if not query or not query.strip():
+            return [TextContent(type="text", text="error: query cannot be empty")]
+
+        # reject invalid result types
+        valid = ["sample", "read_run", "study", "experiment", "assembly"]
+        if result_type not in valid:
+            return [TextContent(type="text",
+                text=f"error: invalid result_type. valid options: {valid}")]
 
         response = requests.get(
             f"{BASE_URL}/count",
@@ -343,6 +366,10 @@ async def call_tool(name: str, arguments: dict):
 
         field = arguments["field"]
         result_type = arguments.get("result_type", "read_run")
+
+        # reject empty field name
+        if not field or not field.strip():
+            return [TextContent(type="text", text="error: field name cannot be empty")]
 
         # returns all accepted values for a given field
         # e.g. instrument_platform -> ILLUMINA, OXFORD_NANOPORE etc.
