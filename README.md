@@ -6,13 +6,13 @@ Built as a GSoC 2026 proof of concept for EMBL-EBI.
 
 ## Live Demo
 
+Try it here: https://isalawal.github.io/ena-mcp-gscos/demo.html
+
 
 
 ![ENA MCP Server Demo](SmartSelect_20260412-173509_Chrome.jpg)
 
 
-
-Query real genomic data from ENA directly in your browser. No setup needed.
 
 ## What it does
 
