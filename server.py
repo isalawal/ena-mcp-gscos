@@ -30,6 +30,33 @@ log = logging.getLogger("ena_mcp")
 # base URL for all ENA Portal API calls
 BASE_URL = "https://www.ebi.ac.uk/ena/portal/api"
 
+# rate limiter - max 10 requests per second to avoid hitting ENA limits
+# if we exceed this, we wait before sending the next request
+import threading
+
+class RateLimiter:
+    def __init__(self, max_calls, period):
+        self.max_calls = max_calls  # max requests allowed
+        self.period = period        # time window in seconds
+        self.calls = []             # timestamps of recent calls
+        self.lock = threading.Lock()
+
+    def wait(self):
+        with self.lock:
+            now = time.time()
+            # remove calls outside the current window
+            self.calls = [t for t in self.calls if now - t < self.period]
+            if len(self.calls) >= self.max_calls:
+                # wait until oldest call falls outside the window
+                sleep_time = self.period - (now - self.calls[0])
+                if sleep_time > 0:
+                    log.info(f"rate limit reached, waiting {sleep_time:.2f}s")
+                    time.sleep(sleep_time)
+            self.calls.append(time.time())
+
+# allow max 5 requests per second to ENA
+rate_limiter = RateLimiter(max_calls=5, period=1.0)
+
 # simple in-memory cache to avoid hitting ENA repeatedly
 # stores results for 5 minutes before fetching fresh data
 import time
@@ -46,6 +73,8 @@ def cached_get(url, params):
             log.info(f"returning cached result for {url}")
             return result
     # fetch fresh data and store in cache
+    # check rate limit before hitting ENA
+    rate_limiter.wait()
     log.info(f"calling ENA: {url} params={params}")
     response = requests.get(url, params=params, timeout=15)
     log.info(f"ENA response: {response.status_code}")
