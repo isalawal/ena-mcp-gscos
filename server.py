@@ -16,6 +16,25 @@ from mcp.types import Tool, TextContent
 # base URL for all ENA Portal API calls
 BASE_URL = "https://www.ebi.ac.uk/ena/portal/api"
 
+# simple in-memory cache to avoid hitting ENA repeatedly
+# stores results for 5 minutes before fetching fresh data
+import time
+_cache = {}
+CACHE_TTL = 300  # seconds
+
+def cached_get(url, params):
+    # build a unique key from the url and params
+    key = str(url) + str(sorted(params.items()))
+    if key in _cache:
+        result, timestamp = _cache[key]
+        # return cached result if still fresh
+        if time.time() - timestamp < CACHE_TTL:
+            return result
+    # fetch fresh data and store in cache
+    response = requests.get(url, params=params, timeout=15)
+    _cache[key] = (response, time.time())
+    return response
+
 # initialise the MCP server
 app = Server("ena-mcp-server")
 
@@ -224,7 +243,7 @@ async def call_tool(name: str, arguments: dict):
         limit = max(1, min(limit, 100))
 
         # call the real ENA search endpoint
-        response = requests.get(
+        response = cached_get(
             f"{BASE_URL}/search",
             params={
                 "result": result_type,
@@ -257,7 +276,7 @@ async def call_tool(name: str, arguments: dict):
             return [TextContent(type="text",
                 text=f"error: invalid result_type. valid options: {valid}")]
 
-        response = requests.get(
+        response = cached_get(
             f"{BASE_URL}/count",
             params={
                 "result": result_type,
@@ -282,7 +301,7 @@ async def call_tool(name: str, arguments: dict):
         result_type = arguments.get("result_type", "sample")
 
         # format=json is required - without it ENA returns an empty response
-        response = requests.get(
+        response = cached_get(
             f"{BASE_URL}/searchFields",
             params={
                 "result": result_type,
@@ -304,7 +323,7 @@ async def call_tool(name: str, arguments: dict):
 
         # ask ENA what data columns we can get back for this result type
         # format=json is required - without it ENA returns an empty response
-        response = requests.get(
+        response = cached_get(
             f"{BASE_URL}/returnFields",
             params={
                 "result": result_type,
@@ -325,7 +344,7 @@ async def call_tool(name: str, arguments: dict):
     elif name == "get_result_types":
 
         # no query needed, just returns everything ENA has
-        response = requests.get(
+        response = cached_get(
             f"{BASE_URL}/results",
             params={
                 "dataPortal": "ena",
@@ -345,7 +364,7 @@ async def call_tool(name: str, arguments: dict):
     elif name == "get_accession_types":
 
         # returns all accession formats ENA recognises e.g. PRJEB, ERR, SRS
-        response = requests.get(
+        response = cached_get(
             f"{BASE_URL}/accessionTypes",
             params={
                 "dataPortal": "ena",
@@ -373,7 +392,7 @@ async def call_tool(name: str, arguments: dict):
 
         # returns all accepted values for a given field
         # e.g. instrument_platform -> ILLUMINA, OXFORD_NANOPORE etc.
-        response = requests.get(
+        response = cached_get(
             f"{BASE_URL}/controlledVocab",
             params={
                 "field": field,
