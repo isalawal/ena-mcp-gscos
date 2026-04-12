@@ -13,6 +13,20 @@ from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import Tool, TextContent
 
+# set up logging so we can track what the server is doing
+# logs go to both the console and a file called ena_mcp.log
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(message)s",
+    handlers=[
+        logging.StreamHandler(),           # print to console
+        logging.FileHandler("ena_mcp.log") # save to file
+    ]
+)
+log = logging.getLogger("ena_mcp")
+
 # base URL for all ENA Portal API calls
 BASE_URL = "https://www.ebi.ac.uk/ena/portal/api"
 
@@ -29,9 +43,12 @@ def cached_get(url, params):
         result, timestamp = _cache[key]
         # return cached result if still fresh
         if time.time() - timestamp < CACHE_TTL:
+            log.info(f"returning cached result for {url}")
             return result
     # fetch fresh data and store in cache
+    log.info(f"calling ENA: {url} params={params}")
     response = requests.get(url, params=params, timeout=15)
+    log.info(f"ENA response: {response.status_code}")
     _cache[key] = (response, time.time())
     return response
 
@@ -222,6 +239,8 @@ async def call_tool(name: str, arguments: dict):
     We call the real ENA API and return the result.
     The AI cannot invent data because it must fetch it here.
     """
+    # log every tool call so we can track usage
+    log.info(f"tool called: {name} args={arguments}")
 
     # tool 1 - search ENA records
     if name == "search_ena":
@@ -258,6 +277,7 @@ async def call_tool(name: str, arguments: dict):
         if response.status_code == 200:
             return [TextContent(type="text", text=json.dumps(response.json(), indent=2))]
         else:
+            log.error(f"search_ena failed: {response.status_code} {response.text}")
             return [TextContent(type="text",
                 text=f"ENA API error {response.status_code}: {response.text}")]
 
