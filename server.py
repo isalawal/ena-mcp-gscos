@@ -76,10 +76,23 @@ def cached_get(url, params):
     # check rate limit before hitting ENA
     rate_limiter.wait()
     log.info(f"calling ENA: {url} params={params}")
-    response = requests.get(url, params=params, timeout=15)
-    log.info(f"ENA response: {response.status_code}")
-    _cache[key] = (response, time.time())
-    return response
+    try:
+        response = requests.get(url, params=params, timeout=15)
+        log.info(f"ENA response: {response.status_code}")
+        _cache[key] = (response, time.time())
+        return response
+    except requests.exceptions.Timeout:
+        # ENA took too long to respond
+        log.error(f"timeout calling ENA: {url}")
+        raise Exception("ENA request timed out after 15 seconds. try again later.")
+    except requests.exceptions.ConnectionError:
+        # no internet or ENA is down
+        log.error(f"connection error calling ENA: {url}")
+        raise Exception("could not connect to ENA. check your internet connection.")
+    except requests.exceptions.RequestException as e:
+        # catch any other request errors
+        log.error(f"request error calling ENA: {e}")
+        raise Exception(f"ENA request failed: {str(e)}")
 
 # initialise the MCP server
 app = Server("ena-mcp-server")
@@ -462,6 +475,7 @@ async def call_tool(name: str, arguments: dict):
     else:
         return [TextContent(type="text",
             text=f"unknown tool: {name}. available: search_ena, count_ena, get_searchable_fields, get_return_fields, get_result_types, get_accession_types, get_controlled_vocab")]
+
 
 
 # server startup
