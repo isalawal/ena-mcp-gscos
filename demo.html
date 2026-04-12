@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ENA MCP Server Demo</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: sans-serif; background: #0f1117; color: #d4d4d4; min-height: 100vh; padding: 20px; }
+  .container { max-width: 800px; margin: 0 auto; }
+  h1 { color: #4a90d9; margin-bottom: 6px; font-size: 22px; }
+  p.sub { color: #888; font-size: 13px; margin-bottom: 24px; }
+  label { display: block; color: #aaa; font-size: 12px; margin-bottom: 6px; }
+  select, input { width: 100%; padding: 10px; background: #1e1e2e; border: 1px solid #333; border-radius: 6px; color: #d4d4d4; font-size: 14px; margin-bottom: 14px; }
+  button { width: 100%; padding: 12px; background: #4a90d9; border: none; border-radius: 6px; color: white; font-size: 15px; font-weight: bold; cursor: pointer; }
+  button:hover { background: #357abd; }
+  button:disabled { background: #333; cursor: not-allowed; }
+  .result { margin-top: 20px; background: #1e1e2e; border: 1px solid #333; border-radius: 6px; padding: 16px; }
+  .result h3 { color: #2ecc71; margin-bottom: 10px; font-size: 13px; }
+  pre { font-size: 11px; color: #a8d8a8; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
+  .error { color: #e74c3c; }
+  .loading { color: #f39c12; }
+  .tag { display: inline-block; background: #2d1b4e; color: #9b59b6; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-right: 6px; margin-bottom: 10px; }
+  .card { background: #1a1a2e; border: 1px solid #2a2a4e; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
+  .card .acc { color: #4a90d9; font-weight: bold; font-size: 13px; }
+  .card .desc { color: #aaa; font-size: 12px; margin-top: 4px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>ENA MCP Server — Live Demo</h1>
+  <p class="sub">Query the European Nucleotide Archive in real time. Built for GSoC 2026 — EMBL-EBI.</p>
+
+  <span class="tag">7 tools</span>
+  <span class="tag">live ENA data</span>
+  <span class="tag">no hallucinations</span>
+
+  <label>Select a tool</label>
+  <select id="tool" onchange="updateForm()">
+    <option value="search">search_ena — find genomic records</option>
+    <option value="count">count_ena — count matching records</option>
+    <option value="fields">get_searchable_fields — what can I filter by?</option>
+    <option value="return">get_return_fields — what data can I get back?</option>
+    <option value="types">get_result_types — what data types exist?</option>
+    <option value="accession">get_accession_types — what accession formats exist?</option>
+    <option value="vocab">get_controlled_vocab — what are valid field values?</option>
+  </select>
+
+  <div id="query_row">
+    <label>Query (ENA query string)</label>
+    <input id="query" type="text" value="tax_eq(9606)" placeholder="e.g. tax_eq(9606) for human">
+  </div>
+
+  <div id="field_row" style="display:none">
+    <label>Field name</label>
+    <input id="field" type="text" value="instrument_platform" placeholder="e.g. instrument_platform">
+  </div>
+
+  <label>Result type</label>
+  <select id="result_type">
+    <option value="sample">sample</option>
+    <option value="read_run">read_run</option>
+    <option value="study">study</option>
+    <option value="experiment">experiment</option>
+    <option value="assembly">assembly</option>
+  </select>
+
+  <div id="limit_row">
+    <label>Limit (max results)</label>
+    <input id="limit" type="number" value="5" min="1" max="20">
+  </div>
+
+  <button id="btn" onclick="runQuery()">Run Query</button>
+
+  <div id="result" class="result" style="display:none">
+    <h3 id="result_title"></h3>
+    <div id="result_body"></div>
+  </div>
+</div>
+
+<script>
+const BASE = "https://www.ebi.ac.uk/ena/portal/api";
+
+function updateForm() {
+  const tool = document.getElementById("tool").value;
+  document.getElementById("query_row").style.display = ["search","count"].includes(tool) ? "block" : "none";
+  document.getElementById("field_row").style.display = tool === "vocab" ? "block" : "none";
+  document.getElementById("limit_row").style.display = tool === "search" ? "block" : "none";
+}
+
+async function runQuery() {
+  const tool = document.getElementById("tool").value;
+  const query = document.getElementById("query").value.trim();
+  const result_type = document.getElementById("result_type").value;
+  const limit = document.getElementById("limit").value;
+  const field = document.getElementById("field").value.trim();
+
+  const btn = document.getElementById("btn");
+  const resultDiv = document.getElementById("result");
+  const resultTitle = document.getElementById("result_title");
+  const resultBody = document.getElementById("result_body");
+
+  btn.disabled = true;
+  btn.textContent = "Fetching from ENA...";
+  resultDiv.style.display = "block";
+  resultTitle.textContent = "Loading...";
+  resultTitle.className = "loading";
+  resultBody.innerHTML = "";
+
+  try {
+    let url, params;
+
+    if (tool === "search") {
+      url = `${BASE}/search?result=${result_type}&query=${encodeURIComponent(query)}&limit=${limit}&format=json&dataPortal=ena`;
+    } else if (tool === "count") {
+      url = `${BASE}/count?result=${result_type}&query=${encodeURIComponent(query)}&dataPortal=ena`;
+    } else if (tool === "fields") {
+      url = `${BASE}/searchFields?result=${result_type}&dataPortal=ena&format=json`;
+    } else if (tool === "return") {
+      url = `${BASE}/returnFields?result=${result_type}&dataPortal=ena&format=json`;
+    } else if (tool === "types") {
+      url = `${BASE}/results?dataPortal=ena&format=json`;
+    } else if (tool === "accession") {
+      url = `${BASE}/accessionTypes?dataPortal=ena&format=json`;
+    } else if (tool === "vocab") {
+      url = `${BASE}/controlledVocab?field=${encodeURIComponent(field)}&result=${result_type}&dataPortal=ena&format=json`;
+    }
+
+    const response = await fetch(url);
+    const text = await response.text();
+
+    resultTitle.className = "";
+    resultTitle.style.color = "#2ecc71";
+
+    if (tool === "count") {
+      const number = text.trim().split("\n").pop().trim();
+      resultTitle.textContent = `Result`;
+      resultBody.innerHTML = `<div style="font-size:32px;color:#4a90d9;font-weight:bold;margin:10px 0">${parseInt(number).toLocaleString()}</div><div style="color:#888;font-size:12px">records matching "${query}" in ${result_type}</div>`;
+    } else {
+      const data = JSON.parse(text);
+      resultTitle.textContent = `${Array.isArray(data) ? data.length : 1} result(s)`;
+
+      if (tool === "search" && Array.isArray(data)) {
+        resultBody.innerHTML = data.map(r => `
+          <div class="card">
+            <div class="acc">${r.accession || r.sample_accession || r.study_accession || "—"}</div>
+            <div class="desc">${r.description || r.study_title || r.scientific_name || JSON.stringify(r).slice(0,100)}</div>
+          </div>`).join("");
+      } else {
+        resultBody.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+      }
+    }
+
+  } catch (e) {
+    resultTitle.textContent = "Error";
+    resultTitle.className = "error";
+    resultBody.innerHTML = `<pre class="error">${e.message}</pre>`;
+  }
+
+  btn.disabled = false;
+  btn.textContent = "Run Query";
+}
+
+updateForm();
+</script>
+</body>
+</html>
