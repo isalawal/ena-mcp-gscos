@@ -10,7 +10,7 @@ Try it here: https://isalawal.github.io/ena-mcp-gscos/demo.html
 
 
 
-![ENA MCP Server Demo](SmartSelect_20260412-173509_Chrome.jpg)
+![ENA MCP Server Demo](SmartSelect_20260412-182427_Chrome.jpg)
 
 
 
