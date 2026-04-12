@@ -4,6 +4,16 @@ A Model Context Protocol (MCP) server that exposes European Nucleotide Archive (
 
 Built as a GSoC 2026 proof of concept for EMBL-EBI.
 
+## Live Demo
+
+
+
+![ENA MCP Server Demo](SmartSelect_20260412-173509_Chrome.jpg)
+
+
+
+Query real genomic data from ENA directly in your browser. No setup needed.
+
 ## What it does
 
 Prevents AI hallucination by forcing AI agents to fetch real verified data from ENA before responding. The agent cannot invent genomic records because every response is fetched from ENA in real time.
@@ -18,6 +28,7 @@ Prevents AI hallucination by forcing AI agents to fetch real verified data from 
 - Logging every tool call and ENA request recorded with a timestamp
 - Docker support run anywhere with a single command
 - 7 pytest tests all passing
+- Web demo anyone can query ENA from a browser
 
 ## Tools
 
@@ -56,6 +67,7 @@ Get valid instrument platforms: field: instrument_platform
 ena_search.py proof of concept ENA API client
 server.py production MCP server with 7 tools
 test_server.py pytest test suite
+demo.html browser based demo for all 7 tools
 Dockerfile container setup
 requirements.txt dependencies
 
