@@ -8,24 +8,45 @@
 body { font-family: sans-serif; background: #0f1117; color: #d4d4d4; padding: 20px; }
 h1 { color: #4a90d9; margin-bottom: 8px; }
 p { color: #888; font-size: 13px; margin-bottom: 20px; }
-textarea { width: 100%; padding: 12px; background: #1e1e2e; border: 1px solid #444; border-radius: 6px; color: #d4d4d4; font-size: 14px; height: 80px; }
+.tip { background: #1a2a1a; border: 1px solid #2ecc71; border-radius: 6px; padding: 12px; margin-bottom: 20px; font-size: 12px; color: #7dbb7d; }
+.tip a { color: #2ecc71; }
+label { display: block; color: #aaa; font-size: 12px; margin-bottom: 6px; margin-top: 14px; }
+input, textarea { width: 100%; padding: 12px; background: #1e1e2e; border: 1px solid #444; border-radius: 6px; color: #d4d4d4; font-size: 14px; }
+textarea { height: 80px; }
 button { display: block; width: 100%; padding: 12px; background: #4a90d9; border: none; border-radius: 6px; color: white; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 12px; }
-#output { margin-top: 20px; background: #1e1e2e; border: 1px solid #333; border-radius: 8px; padding: 16px; display: none; white-space: pre-wrap; font-size: 13px; line-height: 1.7; }
+button:disabled { background: #333; cursor: not-allowed; }
+#output { margin-top: 20px; background: #1e1e2e; border: 1px solid #333; border-radius: 8px; padding: 16px; display: none; }
 .tool { color: #9b59b6; font-size: 12px; margin-bottom: 4px; }
-.answer { color: #d4d4d4; margin-top: 12px; }
-.error { color: #e74c3c; }
+.ok { color: #2ecc71; font-size: 12px; margin-bottom: 4px; }
+.answer { color: #d4d4d4; font-size: 14px; line-height: 1.7; margin-top: 12px; white-space: pre-wrap; }
+.error { color: #e74c3c; font-size: 13px; }
 </style>
 </head>
 <body>
-<h1>ENA MCP Server</h1>
-<p>Ask Gemini anything about genomic data. It queries real ENA data through MCP tools.</p>
 
+<h1>ENA MCP Server — Live Demo</h1>
+<p>Ask Gemini anything about genomic data. It queries real ENA data through MCP tools — no hallucinations.</p>
+
+<div class="tip">
+  Need a free Gemini API key? Get one in 2 minutes at
+  <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a>
+  — no credit card required.
+</div>
+
+<label>Gemini API Key</label>
+<input type="password" id="key" placeholder="Paste your free Gemini API key here">
+
+<label>Your question</label>
 <textarea id="q">How many human sequencing runs are in ENA?</textarea>
-<button onclick="ask()">Ask Gemini</button>
-<div id="output"></div>
+
+<button id="btn" onclick="ask()">Ask Gemini</button>
+
+<div id="output">
+  <div id="steps"></div>
+  <div class="answer" id="answer"></div>
+</div>
 
 <script>
-const KEY = "AIzaSyAgzD1K_OW2JZiYiyJgcczXAAhVPdQmiuo";
 const BASE = "https://www.ebi.ac.uk/ena/portal/api";
 
 async function callTool(name, args) {
@@ -53,40 +74,52 @@ async function callTool(name, args) {
 }
 
 async function ask() {
+  const key = document.getElementById("key").value.trim();
   const q = document.getElementById("q").value.trim();
-  if (!q) return;
+  if (!key) { alert("Please paste your Gemini API key"); return; }
+  if (!q) { alert("Please enter a question"); return; }
+
+  const btn = document.getElementById("btn");
   const out = document.getElementById("output");
+  const steps = document.getElementById("steps");
+  const answer = document.getElementById("answer");
+
+  btn.disabled = true;
+  btn.textContent = "Gemini is thinking...";
   out.style.display = "block";
-  out.innerHTML = "Thinking...";
+  steps.innerHTML = "";
+  answer.textContent = "";
 
   const tools = [{functionDeclarations: [
-    {name:"search_ena", description:"Search ENA for genomic records.", parameters:{type:"OBJECT", properties:{query:{type:"STRING"}, result_type:{type:"STRING"}, limit:{type:"INTEGER"}}, required:["query"]}},
-    {name:"count_ena", description:"Count ENA records matching a query.", parameters:{type:"OBJECT", properties:{query:{type:"STRING"}, result_type:{type:"STRING"}}, required:["query"]}},
-    {name:"get_result_types", description:"Get all data types in ENA.", parameters:{type:"OBJECT", properties:{placeholder:{type:"STRING"}}}},
-    {name:"get_searchable_fields", description:"Get searchable fields for a result type.", parameters:{type:"OBJECT", properties:{result_type:{type:"STRING"}}}}
+    {name:"search_ena", description:"Search ENA for real genomic records like samples, studies, sequencing runs.", parameters:{type:"OBJECT", properties:{query:{type:"STRING", description:"ENA query e.g. tax_eq(9606) for human"}, result_type:{type:"STRING", description:"sample, read_run, or study"}, limit:{type:"INTEGER", description:"number of results"}}, required:["query"]}},
+    {name:"count_ena", description:"Count how many records in ENA match a query.", parameters:{type:"OBJECT", properties:{query:{type:"STRING", description:"ENA query string"}, result_type:{type:"STRING", description:"sample, read_run, or study"}}, required:["query"]}},
+    {name:"get_result_types", description:"Get all available data types in ENA.", parameters:{type:"OBJECT", properties:{placeholder:{type:"STRING"}}}},
+    {name:"get_searchable_fields", description:"Get all fields that can be searched for a given ENA result type.", parameters:{type:"OBJECT", properties:{result_type:{type:"STRING", description:"sample, read_run, or study"}}}}
   ]}];
 
+  const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + key;
   const contents = [{role:"user", parts:[{text:q}]}];
-  const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + KEY;
-  let html = "";
 
   try {
-    for (let i = 0; i < 5; i++) {
-      const res = await fetch(url, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({contents, tools})});
+    for (let i = 0; i < 6; i++) {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({contents, tools})
+      });
       const data = await res.json();
 
       if (data.error) {
-        out.innerHTML = '<span class="error">Error: ' + data.error.message + '</span>';
-        return;
+        answer.innerHTML = '<span class="error">Error: ' + data.error.message + '</span>';
+        break;
       }
 
       const parts = data.candidates[0].content.parts;
       const calls = parts.filter(p => p.functionCall);
 
       if (!calls.length) {
-        const text = parts.map(p => p.text||"").join("");
-        out.innerHTML = html + '<div class="answer">' + text + '</div>';
-        return;
+        answer.textContent = parts.map(p => p.text||"").join("");
+        break;
       }
 
       contents.push({role:"model", parts});
@@ -94,18 +127,20 @@ async function ask() {
 
       for (const p of calls) {
         const {name, args} = p.functionCall;
-        html += '<div class="tool">→ calling ' + name + '(' + JSON.stringify(args) + ')</div>';
-        out.innerHTML = html + "fetching from ENA...";
+        steps.innerHTML += '<div class="tool">→ calling ' + name + '(' + JSON.stringify(args||{}) + ')</div>';
         const result = await callTool(name, args||{});
-        html += '<div class="tool" style="color:#2ecc71">✓ ENA returned ' + JSON.stringify(result).slice(0,80) + '...</div>';
+        steps.innerHTML += '<div class="ok">✓ ENA returned real data</div>';
         results.push({functionResponse:{name, response:{result:JSON.stringify(result)}}});
       }
 
       contents.push({role:"user", parts:results});
     }
   } catch(e) {
-    out.innerHTML = '<span class="error">Error: ' + e.message + '</span>';
+    answer.innerHTML = '<span class="error">Error: ' + e.message + '</span>';
   }
+
+  btn.disabled = false;
+  btn.textContent = "Ask Gemini";
 }
 </script>
 </body>
