@@ -6,531 +6,200 @@
 <title>ENA MCP Server — Live Demo</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: sans-serif; background: #0f1117; color: #d4d4d4; min-height: 100vh; padding: 16px; }
-.container { max-width: 860px; margin: 0 auto; }
-h1 { color: #4a90d9; font-size: 22px; margin-bottom: 4px; }
-.tagline { color: #888; font-size: 12px; margin-bottom: 10px; }
-.badges { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
-.badge { background: #1e1e2e; border: 1px solid #333; border-radius: 4px; padding: 3px 10px; font-size: 11px; color: #9b59b6; }
-.badge.green { color: #2ecc71; border-color: #2ecc71; }
-.badge.blue { color: #4a90d9; border-color: #4a90d9; }
-.section { background: #1a1a2e; border: 1px solid #2a2a4e; border-radius: 8px; padding: 14px; margin-bottom: 14px; }
-.section h2 { color: #9b59b6; font-size: 12px; margin-bottom: 10px; letter-spacing: 1px; text-transform: uppercase; }
-.section p { color: #666; font-size: 11px; margin-bottom: 10px; line-height: 1.6; }
-label { display: block; color: #888; font-size: 11px; margin-bottom: 5px; margin-top: 10px; }
-select, input { width: 100%; padding: 9px; background: #0f1117; border: 1px solid #333; border-radius: 5px; color: #d4d4d4; font-size: 13px; }
-button { width: 100%; padding: 11px; background: #4a90d9; border: none; border-radius: 6px; color: white; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 12px; }
+body { font-family: sans-serif; background: #0f1117; color: #d4d4d4; min-height: 100vh; padding: 20px; }
+.container { max-width: 700px; margin: 0 auto; }
+h1 { color: #4a90d9; font-size: 22px; margin-bottom: 6px; }
+p.sub { color: #888; font-size: 12px; margin-bottom: 24px; }
+label { display: block; color: #aaa; font-size: 12px; margin-bottom: 6px; margin-top: 14px; }
+textarea { width: 100%; padding: 12px; background: #1e1e2e; border: 1px solid #333; border-radius: 6px; color: #d4d4d4; font-size: 14px; resize: vertical; min-height: 80px; }
+button { width: 100%; padding: 12px; background: #4a90d9; border: none; border-radius: 6px; color: white; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 14px; }
 button:hover { background: #357abd; }
-button:disabled { background: #2a2a3e; color: #555; cursor: not-allowed; }
-.result-box { background: #0f1117; border: 1px solid #2a2a4e; border-radius: 6px; padding: 12px; margin-top: 12px; }
-.result-box h3 { font-size: 11px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
-.result-box.success h3 { color: #2ecc71; }
-.result-box.error h3 { color: #e74c3c; }
-.result-box.loading h3 { color: #f39c12; }
-.record { background: #1a1a2e; border-left: 3px solid #4a90d9; border-radius: 4px; padding: 10px; margin-bottom: 8px; }
-.record .acc { color: #4a90d9; font-weight: bold; font-size: 13px; }
-.record .desc { color: #aaa; font-size: 12px; margin-top: 3px; }
-.count-display { font-size: 40px; font-weight: bold; color: #4a90d9; text-align: center; padding: 16px 0 6px; }
-.count-label { text-align: center; color: #666; font-size: 12px; margin-bottom: 8px; }
-pre { font-size: 10.5px; color: #7dbb7d; overflow-x: auto; white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow-y: auto; }
-.status-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; margin-bottom: 8px; }
-.status-pill { font-size: 10px; padding: 3px 8px; border-radius: 10px; }
-.status-pill.ok { background: #1a3a1a; color: #2ecc71; border: 1px solid #2ecc71; }
-.status-pill.warn { background: #3a2a00; color: #f39c12; border: 1px solid #f39c12; }
-.status-pill.err { background: #3a1a1a; color: #e74c3c; border: 1px solid #e74c3c; }
-.features { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
-.feature { background: #1a1a2e; border: 1px solid #2a2a4e; border-radius: 6px; padding: 10px; }
-.feature .icon { font-size: 18px; margin-bottom: 4px; }
-.feature .name { color: #d4d4d4; font-size: 12px; font-weight: bold; }
-.feature .desc { color: #666; font-size: 10px; margin-top: 2px; }
-.tools-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 12px; }
-.tool-card { background: #1a1a2e; border: 1px solid #2a2a4e; border-radius: 5px; padding: 8px; cursor: pointer; }
-.tool-card:hover { border-color: #9b59b6; }
-.tool-card.active { border-color: #4a90d9; background: #1a2a3e; }
-.tool-card .tname { color: #4a90d9; font-size: 11px; font-weight: bold; }
-.tool-card .tendpoint { color: #555; font-size: 10px; margin-top: 2px; }
-.tool-card .tdesc { color: #888; font-size: 10px; margin-top: 3px; }
-.val-row { display: flex; gap: 8px; margin-bottom: 6px; align-items: center; }
-.val-input { flex: 1; padding: 7px; background: #0f1117; border: 1px solid #333; border-radius: 4px; color: #d4d4d4; font-size: 12px; }
-.val-btn { padding: 7px 12px; background: #2d1b4e; border: 1px solid #9b59b6; border-radius: 4px; color: #9b59b6; font-size: 11px; cursor: pointer; white-space: nowrap; }
-.val-result { font-size: 11px; padding: 5px 8px; border-radius: 4px; margin-bottom: 6px; }
-.val-result.pass { background: #1a3a1a; color: #2ecc71; }
-.val-result.fail { background: #3a1a1a; color: #e74c3c; }
-.workflow-step { background: #0f1117; border: 1px solid #2a2a4e; border-radius: 5px; padding: 10px; margin-bottom: 8px; }
-.workflow-step .step-num { color: #9b59b6; font-size: 10px; font-weight: bold; margin-bottom: 4px; }
-.workflow-step .step-tool { color: #4a90d9; font-size: 12px; font-weight: bold; }
-.workflow-step .step-desc { color: #888; font-size: 11px; margin-top: 3px; }
-.workflow-step .step-result { color: #2ecc71; font-size: 11px; margin-top: 6px; padding: 6px; background: #1a2a1a; border-radius: 3px; display: none; }
-.workflow-step.done .step-result { display: block; }
-.workflow-step.active { border-color: #f39c12; }
-.workflow-step.done { border-color: #2ecc71; }
-.norm-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
-.norm-box { background: #0f1117; border: 1px solid #333; border-radius: 5px; padding: 10px; }
-.norm-box h4 { font-size: 11px; margin-bottom: 6px; }
-.norm-box.raw h4 { color: #e74c3c; }
-.norm-box.normalized h4 { color: #2ecc71; }
-.norm-box pre { font-size: 10px; max-height: 180px; }
-.arch-item { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid #1a1a2e; }
-.arch-item:last-child { border-bottom: none; }
-.arch-item .arch-icon { font-size: 20px; min-width: 30px; }
-.arch-item .arch-content .arch-title { color: #d4d4d4; font-size: 12px; font-weight: bold; }
-.arch-item .arch-content .arch-desc { color: #666; font-size: 11px; margin-top: 2px; line-height: 1.5; }
-.embl-item { background: #0f1117; border: 1px solid #2a2a4e; border-radius: 5px; padding: 8px; margin-bottom: 6px; }
-.embl-item .res-name { color: #4a90d9; font-size: 12px; font-weight: bold; }
-.embl-item .res-desc { color: #666; font-size: 11px; margin-top: 3px; }
-.embl-item .res-status { font-size: 10px; margin-top: 4px; }
-.embl-item .res-status.done { color: #2ecc71; }
-.embl-item .res-status.planned { color: #f39c12; }
+button:disabled { background: #333; cursor: not-allowed; }
+.response { margin-top: 20px; background: #1e1e2e; border: 1px solid #2a2a4e; border-radius: 8px; padding: 16px; display: none; }
+.response h3 { color: #2ecc71; font-size: 12px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+.tools-used { margin-bottom: 12px; }
+.tool-call { background: #0f1117; border-left: 3px solid #9b59b6; padding: 8px 12px; margin-bottom: 6px; border-radius: 3px; font-size: 11px; }
+.tool-call .name { color: #9b59b6; font-weight: bold; }
+.tool-call .args { color: #666; margin-top: 3px; }
+.tool-call .result { color: #7dbb7d; margin-top: 3px; }
+.answer { background: #0f1117; border-left: 3px solid #2ecc71; padding: 12px; border-radius: 3px; color: #d4d4d4; font-size: 14px; line-height: 1.7; white-space: pre-wrap; }
+.error { color: #e74c3c; font-size: 13px; }
+.tag { display: inline-block; background: #1a1a2e; border: 1px solid #333; border-radius: 4px; padding: 2px 8px; font-size: 11px; color: #9b59b6; margin-right: 6px; margin-bottom: 16px; }
 </style>
 </head>
 <body>
 <div class="container">
 
   <h1>ENA MCP Server</h1>
-  <p class="tagline">A production-ready MCP server exposing a broad subset of ENA REST APIs — GSoC 2026, EMBL-EBI.</p>
-  <div class="badges">
-    <span class="badge blue">7 MCP Tools</span>
-    <span class="badge green">Live ENA Data</span>
-    <span class="badge green">No Hallucinations</span>
-    <span class="badge">Input Validation</span>
-    <span class="badge">Caching</span>
-    <span class="badge">Rate Limiting</span>
-    <span class="badge">Error Handling</span>
-    <span class="badge">Docker Ready</span>
-  </div>
+  <p class="sub">Ask Gemini a question about genomic data. It will call your ENA MCP tools to get real verified answers.</p>
 
-  <!-- Production Features -->
-  <div class="features">
-    <div class="feature">
-      <div class="icon">🛡️</div>
-      <div class="name">Input Validation</div>
-      <div class="desc">Rejects bad queries before hitting ENA</div>
-    </div>
-    <div class="feature">
-      <div class="icon">⚡</div>
-      <div class="name">Caching</div>
-      <div class="desc">Repeated queries return from memory</div>
-    </div>
-    <div class="feature">
-      <div class="icon">🚦</div>
-      <div class="name">Rate Limiting</div>
-      <div class="desc">Max 5 requests/sec — protects ENA</div>
-    </div>
-    <div class="feature">
-      <div class="icon">🐳</div>
-      <div class="name">Docker Ready</div>
-      <div class="desc">Deploy anywhere with one command</div>
-    </div>
-  </div>
+  <span class="tag">Powered by Gemini</span>
+  <span class="tag">Real ENA data</span>
+  <span class="tag">No hallucinations</span>
 
-  <!-- SECTION 1: Query Tool -->
-  <div class="section">
-    <h2>1. Query ENA via MCP Tools</h2>
-    <p>Select a tool and run a live query against the European Nucleotide Archive. All responses are real, deterministic, and traceable — backed by authoritative ENA data.</p>
-    <div class="tools-grid">
-      <div class="tool-card active" onclick="selectTool('search')" id="card-search">
-        <div class="tname">search_ena</div>
-        <div class="tendpoint">GET /search</div>
-        <div class="tdesc">Find genomic records</div>
-      </div>
-      <div class="tool-card" onclick="selectTool('count')" id="card-count">
-        <div class="tname">count_ena</div>
-        <div class="tendpoint">GET /count</div>
-        <div class="tdesc">Count matching records</div>
-      </div>
-      <div class="tool-card" onclick="selectTool('fields')" id="card-fields">
-        <div class="tname">get_searchable_fields</div>
-        <div class="tendpoint">GET /searchFields</div>
-        <div class="tdesc">Discover search filters</div>
-      </div>
-      <div class="tool-card" onclick="selectTool('return')" id="card-return">
-        <div class="tname">get_return_fields</div>
-        <div class="tendpoint">GET /returnFields</div>
-        <div class="tdesc">Discover returnable data</div>
-      </div>
-      <div class="tool-card" onclick="selectTool('types')" id="card-types">
-        <div class="tname">get_result_types</div>
-        <div class="tendpoint">GET /results</div>
-        <div class="tdesc">List all data types in ENA</div>
-      </div>
-      <div class="tool-card" onclick="selectTool('accession')" id="card-accession">
-        <div class="tname">get_accession_types</div>
-        <div class="tendpoint">GET /accessionTypes</div>
-        <div class="tdesc">Get valid accession formats</div>
-      </div>
-      <div class="tool-card" onclick="selectTool('vocab')" id="card-vocab">
-        <div class="tname">get_controlled_vocab</div>
-        <div class="tendpoint">GET /controlledVocab</div>
-        <div class="tdesc">Get valid field values</div>
-      </div>
-    </div>
+  <label>Your Gemini API key</label>
+  <input type="password" id="apikey" placeholder="Paste your Gemini API key here" style="width:100%;padding:10px;background:#1e1e2e;border:1px solid #333;border-radius:6px;color:#d4d4d4;font-size:13px;">
 
-    <div id="query_row">
-      <label>Query string</label>
-      <input id="query" type="text" value="tax_eq(9606)" placeholder="e.g. tax_eq(9606) for human">
-    </div>
-    <div id="field_row" style="display:none">
-      <label>Field name</label>
-      <input id="field" type="text" value="instrument_platform">
-    </div>
-    <label>Result type</label>
-    <select id="result_type">
-      <option value="sample">sample</option>
-      <option value="read_run">read_run</option>
-      <option value="study">study</option>
-      <option value="experiment">experiment</option>
-      <option value="assembly">assembly</option>
-    </select>
-    <div id="limit_row">
-      <label>Limit (max 100)</label>
-      <input id="limit" type="number" value="5" min="1" max="100">
-    </div>
-    <button id="btn" onclick="runQuery()">Run Query</button>
-    <div id="result" style="display:none"></div>
-  </div>
+  <label>Ask a question</label>
+  <textarea id="question" placeholder="e.g. How many human sequencing runs are in ENA?&#10;e.g. Find me 3 human samples&#10;e.g. What types of data are available in ENA?">How many human sequencing runs are in ENA?</textarea>
 
-  <!-- SECTION 2: Agent Workflow -->
-  <div class="section">
-    <h2>2. AI Agent Workflow — Composing Multiple Queries</h2>
-    <p>This simulates how an LLM agent chains multiple MCP tools together into a single logical operation. The agent first discovers what data exists, then what it can filter by, then runs the actual search — all automatically.</p>
-    <button onclick="runWorkflow()" id="wf-btn">Run Agent Workflow</button>
-    <div id="workflow-steps" style="margin-top:12px">
-      <div class="workflow-step" id="wf1">
-        <div class="step-num">STEP 1</div>
-        <div class="step-tool">get_result_types</div>
-        <div class="step-desc">Agent discovers what data types exist in ENA</div>
-        <div class="step-result" id="wf1-result"></div>
-      </div>
-      <div class="workflow-step" id="wf2">
-        <div class="step-num">STEP 2</div>
-        <div class="step-tool">get_searchable_fields</div>
-        <div class="step-desc">Agent discovers what fields it can filter by for samples</div>
-        <div class="step-result" id="wf2-result"></div>
-      </div>
-      <div class="workflow-step" id="wf3">
-        <div class="step-num">STEP 3</div>
-        <div class="step-tool">count_ena</div>
-        <div class="step-desc">Agent checks scale before fetching — how many human samples exist?</div>
-        <div class="step-result" id="wf3-result"></div>
-      </div>
-      <div class="workflow-step" id="wf4">
-        <div class="step-num">STEP 4</div>
-        <div class="step-tool">search_ena</div>
-        <div class="step-desc">Agent fetches real records — deterministic, traceable, no hallucinations</div>
-        <div class="step-result" id="wf4-result"></div>
-      </div>
-    </div>
-  </div>
+  <button id="btn" onclick="ask()">Ask Gemini</button>
 
-  <!-- SECTION 3: Response Normalization -->
-  <div class="section">
-    <h2>3. Response Normalization</h2>
-    <p>ENA endpoints return heterogeneous response formats. The MCP server normalizes them into consistent structured output so the AI always receives predictable data.</p>
-    <button onclick="runNormalization()" id="norm-btn">Show Normalization Demo</button>
-    <div id="norm-result" style="display:none;margin-top:12px">
-      <div class="norm-row">
-        <div class="norm-box raw">
-          <h4>Raw ENA Response (count endpoint)</h4>
-          <pre id="raw-count"></pre>
-        </div>
-        <div class="norm-box normalized">
-          <h4>Normalized MCP Output</h4>
-          <pre id="norm-count"></pre>
-        </div>
-      </div>
-      <div class="norm-row" style="margin-top:8px">
-        <div class="norm-box raw">
-          <h4>Raw ENA Response (search endpoint)</h4>
-          <pre id="raw-search"></pre>
-        </div>
-        <div class="norm-box normalized">
-          <h4>Normalized MCP Output</h4>
-          <pre id="norm-search"></pre>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SECTION 4: Input Validation -->
-  <div class="section">
-    <h2>4. Input Validation — Explicit Output Contracts</h2>
-    <p>Every tool validates inputs before touching ENA. Clear error semantics mean the AI always knows exactly what went wrong.</p>
-    <div style="margin-top:8px">
-      <div class="val-row">
-        <input class="val-input" value="(empty query)" readonly>
-        <button class="val-btn" onclick="showVal('r1','empty')">Test</button>
-      </div>
-      <div id="r1"></div>
-      <div class="val-row">
-        <input class="val-input" value="invalid_result_type" readonly>
-        <button class="val-btn" onclick="showVal('r2','type')">Test</button>
-      </div>
-      <div id="r2"></div>
-      <div class="val-row">
-        <input class="val-input" value="tax_eq(9606)" readonly>
-        <button class="val-btn" onclick="showVal('r3','valid')">Test</button>
-      </div>
-      <div id="r3"></div>
-    </div>
-  </div>
-
-  <!-- SECTION 5: Architecture -->
-  <div class="section">
-    <h2>5. Architecture and Design Decisions</h2>
-    <div class="arch-item">
-      <div class="arch-icon">🔗</div>
-      <div class="arch-content">
-        <div class="arch-title">MCP stdio transport</div>
-        <div class="arch-desc">Server uses stdio_server from the MCP Python SDK. AI agents connect via standard input/output — no HTTP server needed, making it lightweight and portable.</div>
-      </div>
-    </div>
-    <div class="arch-item">
-      <div class="arch-icon">📋</div>
-      <div class="arch-content">
-        <div class="arch-title">Explicit tool schemas</div>
-        <div class="arch-desc">Every tool has a typed inputSchema with required fields, defaults, and descriptions. The AI reads these schemas to know exactly what each tool accepts and returns.</div>
-      </div>
-    </div>
-    <div class="arch-item">
-      <div class="arch-icon">⚡</div>
-      <div class="arch-content">
-        <div class="arch-title">In-memory caching with TTL</div>
-        <div class="arch-desc">Responses cached for 300 seconds using URL+params as key. Eliminates redundant ENA calls — AI agents frequently repeat identical queries.</div>
-      </div>
-    </div>
-    <div class="arch-item">
-      <div class="arch-icon">🚦</div>
-      <div class="arch-content">
-        <div class="arch-title">Token bucket rate limiter</div>
-        <div class="arch-desc">Thread-safe rate limiter caps requests at 5/second. Automatically waits when limit is reached — transparent to the AI agent.</div>
-      </div>
-    </div>
-    <div class="arch-item">
-      <div class="arch-icon">📦</div>
-      <div class="arch-content">
-        <div class="arch-title">Modular tool design</div>
-        <div class="arch-desc">Each tool is independently defined with its own handler. Adding new endpoints requires only a new Tool() definition and elif block — the architecture scales cleanly.</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SECTION 6: Extensibility -->
-  <div class="section">
-    <h2>6. Scalable Foundation — Other EMBL-EBI Resources</h2>
-    <p>The architecture is designed to extend beyond ENA. The same MCP pattern can wrap any EMBL-EBI REST API.</p>
-    <div class="embl-item">
-      <div class="res-name">ENA — European Nucleotide Archive</div>
-      <div class="res-desc">Genomic sequences, samples, studies, runs</div>
-      <div class="res-status done">✅ Implemented — 7 tools live</div>
-    </div>
-    <div class="embl-item">
-      <div class="res-name">BioSamples</div>
-      <div class="res-desc">Biological sample metadata and submission</div>
-      <div class="res-status planned">🔄 Planned — same architecture applies</div>
-    </div>
-    <div class="embl-item">
-      <div class="res-name">UniProt</div>
-      <div class="res-desc">Protein sequences and functional information</div>
-      <div class="res-status planned">🔄 Planned — same architecture applies</div>
-    </div>
-    <div class="embl-item">
-      <div class="res-name">Ensembl</div>
-      <div class="res-desc">Genome browser and annotation data</div>
-      <div class="res-status planned">🔄 Planned — same architecture applies</div>
-    </div>
-  </div>
-
-  <div style="text-align:center;color:#444;font-size:11px;padding:16px 0">
-    GSoC 2026 — EMBL-EBI &nbsp;|&nbsp;
-    <a href="https://github.com/isalawal/ena-mcp-gscos" style="color:#4a90d9">GitHub</a>
+  <div class="response" id="response">
+    <h3>Response</h3>
+    <div class="tools-used" id="tools_used"></div>
+    <div class="answer" id="answer"></div>
   </div>
 
 </div>
 
 <script>
 const BASE = "https://www.ebi.ac.uk/ena/portal/api";
-let currentTool = 'search';
 
-function selectTool(tool) {
-  document.querySelectorAll('.tool-card').forEach(c => c.classList.remove('active'));
-  document.getElementById('card-' + tool).classList.add('active');
-  currentTool = tool;
-  document.getElementById('query_row').style.display = ['search','count'].includes(tool) ? 'block' : 'none';
-  document.getElementById('field_row').style.display = tool === 'vocab' ? 'block' : 'none';
-  document.getElementById('limit_row').style.display = tool === 'search' ? 'block' : 'none';
-  document.getElementById('result').style.display = 'none';
-}
-
-function showVal(id, type) {
-  const el = document.getElementById(id);
-  if (type === 'empty') {
-    el.innerHTML = '<div class="val-result fail">error: query cannot be empty — rejected before hitting ENA API</div>';
-  } else if (type === 'type') {
-    el.innerHTML = '<div class="val-result fail">error: invalid result_type. valid options: [sample, read_run, study, experiment, assembly]</div>';
-  } else {
-    el.innerHTML = '<div class="val-result pass">✓ valid — passed all validation checks, forwarded to ENA</div>';
-  }
-}
-
-async function runQuery() {
-  const query = document.getElementById('query').value.trim();
-  const result_type = document.getElementById('result_type').value;
-  const limit = document.getElementById('limit').value;
-  const field = document.getElementById('field').value.trim();
-  const btn = document.getElementById('btn');
-  const resultDiv = document.getElementById('result');
-
-  btn.disabled = true;
-  btn.textContent = 'Fetching from ENA...';
-  resultDiv.style.display = 'block';
-  resultDiv.innerHTML = '<div class="result-box loading"><h3>Calling ENA API...</h3></div>';
-
-  const start = Date.now();
-  try {
-    let url;
-    if (currentTool === 'search') url = `${BASE}/search?result=${result_type}&query=${encodeURIComponent(query)}&limit=${limit}&format=json&dataPortal=ena`;
-    else if (currentTool === 'count') url = `${BASE}/count?result=${result_type}&query=${encodeURIComponent(query)}&dataPortal=ena`;
-    else if (currentTool === 'fields') url = `${BASE}/searchFields?result=${result_type}&dataPortal=ena&format=json`;
-    else if (currentTool === 'return') url = `${BASE}/returnFields?result=${result_type}&dataPortal=ena&format=json`;
-    else if (currentTool === 'types') url = `${BASE}/results?dataPortal=ena&format=json`;
-    else if (currentTool === 'accession') url = `${BASE}/accessionTypes?dataPortal=ena&format=json`;
-    else if (currentTool === 'vocab') url = `${BASE}/controlledVocab?field=${encodeURIComponent(field)}&result=${result_type}&dataPortal=ena&format=json`;
-
-    const response = await fetch(url);
-    const text = await response.text();
-    const elapsed = Date.now() - start;
-
-    let html = '<div class="result-box success"><h3>Response received</h3>';
-    html += `<div class="status-row"><span class="status-pill ok">status: ${response.status}</span><span class="status-pill ok">time: ${elapsed}ms</span><span class="status-pill warn">cached after first call</span></div>`;
-
-    if (currentTool === 'count') {
-      const number = text.trim().split('\n').pop().trim();
-      html += `<div class="count-display">${parseInt(number).toLocaleString()}</div><div class="count-label">records matching "${query}" in ${result_type}</div>`;
-    } else {
-      const data = JSON.parse(text);
-      if (currentTool === 'search' && Array.isArray(data)) {
-        html += `<div style="color:#888;font-size:11px;margin:8px 0">${data.length} records — real ENA data, deterministic and traceable</div>`;
-        html += data.map(r => `<div class="record"><div class="acc">${r.accession||r.sample_accession||Object.values(r)[0]||'N/A'}</div><div class="desc">${r.description||r.study_title||r.scientific_name||Object.values(r)[1]||''}</div></div>`).join('');
-      } else {
-        html += `<div style="color:#888;font-size:11px;margin:8px 0">${Array.isArray(data)?data.length+' items':''} returned</div><pre>${JSON.stringify(data,null,2)}</pre>`;
+const tools = [{
+  "functionDeclarations": [
+    {
+      "name": "search_ena",
+      "description": "Search the European Nucleotide Archive for real genomic records.",
+      "parameters": {
+        "type": "OBJECT",
+        "properties": {
+          "query": {"type": "STRING", "description": "ENA query e.g. tax_eq(9606) for human"},
+          "result_type": {"type": "STRING", "description": "sample, read_run, or study"},
+          "limit": {"type": "INTEGER", "description": "number of results to return"}
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "count_ena",
+      "description": "Count how many records in ENA match a query.",
+      "parameters": {
+        "type": "OBJECT",
+        "properties": {
+          "query": {"type": "STRING", "description": "ENA query string"},
+          "result_type": {"type": "STRING", "description": "sample, read_run, or study"}
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "get_result_types",
+      "description": "Get all available data types in ENA.",
+      "parameters": {
+        "type": "OBJECT",
+        "properties": {
+          "placeholder": {"type": "STRING", "description": "not used"}
+        }
+      }
+    },
+    {
+      "name": "get_searchable_fields",
+      "description": "Get all fields that can be searched for a given ENA result type.",
+      "parameters": {
+        "type": "OBJECT",
+        "properties": {
+          "result_type": {"type": "STRING", "description": "sample, read_run, or study"}
+        }
       }
     }
-    html += '</div>';
-    resultDiv.innerHTML = html;
-  } catch(e) {
-    resultDiv.innerHTML = `<div class="result-box error"><h3>Error</h3><pre>${e.message}</pre></div>`;
+  ]
+}];
+
+async function callEnaTool(name, args) {
+  if (name === "search_ena") {
+    const r = await fetch(`${BASE}/search?result=${args.result_type||"sample"}&query=${encodeURIComponent(args.query)}&limit=${args.limit||5}&format=json&dataPortal=ena`);
+    return await r.json();
+  } else if (name === "count_ena") {
+    const r = await fetch(`${BASE}/count?result=${args.result_type||"read_run"}&query=${encodeURIComponent(args.query)}&dataPortal=ena`);
+    const text = await r.text();
+    const number = parseInt(text.trim().split("\n").pop().trim());
+    return {count: number, formatted: number.toLocaleString()};
+  } else if (name === "get_result_types") {
+    const r = await fetch(`${BASE}/results?dataPortal=ena&format=json`);
+    return await r.json();
+  } else if (name === "get_searchable_fields") {
+    const r = await fetch(`${BASE}/searchFields?result=${args.result_type||"sample"}&dataPortal=ena&format=json`);
+    return await r.json();
   }
-  btn.disabled = false;
-  btn.textContent = 'Run Query';
+  return {error: "unknown tool"};
 }
 
-async function runWorkflow() {
-  const btn = document.getElementById('wf-btn');
+async function ask() {
+  const apikey = document.getElementById("apikey").value.trim();
+  const question = document.getElementById("question").value.trim();
+  const btn = document.getElementById("btn");
+  const responseDiv = document.getElementById("response");
+  const toolsUsed = document.getElementById("tools_used");
+  const answerDiv = document.getElementById("answer");
+
+  if (!apikey) { alert("Please enter your Gemini API key"); return; }
+  if (!question) { alert("Please enter a question"); return; }
+
   btn.disabled = true;
-  btn.textContent = 'Agent running...';
+  btn.textContent = "Gemini is thinking...";
+  responseDiv.style.display = "block";
+  toolsUsed.innerHTML = "";
+  answerDiv.innerHTML = "Calling Gemini...";
 
-  ['wf1','wf2','wf3','wf4'].forEach(id => {
-    document.getElementById(id).className = 'workflow-step';
-    document.getElementById(id+'-result').style.display = 'none';
-  });
-
-  async function step(id, url, process) {
-    document.getElementById(id).className = 'workflow-step active';
-    await new Promise(r => setTimeout(r, 500));
-    try {
-      const res = await fetch(url);
-      const text = await res.text();
-      const result = process(text);
-      document.getElementById(id+'-result').textContent = result;
-      document.getElementById(id+'-result').style.display = 'block';
-      document.getElementById(id).className = 'workflow-step done';
-    } catch(e) {
-      document.getElementById(id+'-result').textContent = 'error: ' + e.message;
-      document.getElementById(id+'-result').style.display = 'block';
-    }
-    await new Promise(r => setTimeout(r, 400));
-  }
-
-  await step('wf1',
-    `${BASE}/results?dataPortal=ena&format=json`,
-    text => {
-      const data = JSON.parse(text);
-      return `Found ${data.length} result types including: ${data.slice(0,4).map(d=>d.result||d.resultType||JSON.stringify(d)).join(', ')}...`;
-    }
-  );
-
-  await step('wf2',
-    `${BASE}/searchFields?result=sample&dataPortal=ena&format=json`,
-    text => {
-      const data = JSON.parse(text);
-      return `Found ${data.length} searchable fields. Examples: ${data.slice(0,3).map(f=>f.columnId||f.name||JSON.stringify(f)).join(', ')}...`;
-    }
-  );
-
-  await step('wf3',
-    `${BASE}/count?result=sample&query=tax_eq(9606)&dataPortal=ena`,
-    text => {
-      const number = text.trim().split('\n').pop().trim();
-      return `${parseInt(number).toLocaleString()} human samples found. Scale confirmed — proceeding to fetch records.`;
-    }
-  );
-
-  await step('wf4',
-    `${BASE}/search?result=sample&query=tax_eq(9606)&limit=3&format=json&dataPortal=ena`,
-    text => {
-      const data = JSON.parse(text);
-      return `Retrieved ${data.length} records. First: ${data[0]?.sample_accession||data[0]?.accession} — ${data[0]?.description||data[0]?.scientific_name||'human sample'}. Deterministic. Traceable. No hallucinations.`;
-    }
-  );
-
-  btn.disabled = false;
-  btn.textContent = 'Run Agent Workflow Again';
-}
-
-async function runNormalization() {
-  const btn = document.getElementById('norm-btn');
-  btn.disabled = true;
-  btn.textContent = 'Fetching...';
+  const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apikey}`;
+  const contents = [{"role": "user", "parts": [{"text": question}]}];
 
   try {
-    const countRes = await fetch(`${BASE}/count?result=read_run&query=tax_eq(9606)&dataPortal=ena`);
-    const countRaw = await countRes.text();
-    const countNum = parseInt(countRaw.trim().split('\n').pop().trim());
+    while (true) {
+      const res = await fetch(GEMINI_URL, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({contents, tools})
+      });
+      const data = await res.json();
 
-    document.getElementById('raw-count').textContent = countRaw.trim();
-    document.getElementById('norm-count').textContent = JSON.stringify({
-      tool: "count_ena",
-      query: "tax_eq(9606)",
-      result_type: "read_run",
-      count: countNum,
-      formatted: countNum.toLocaleString()
-    }, null, 2);
+      if (data.error) {
+        answerDiv.innerHTML = `<span class="error">Gemini error: ${data.error.message}</span>`;
+        break;
+      }
 
-    const searchRes = await fetch(`${BASE}/search?result=sample&query=tax_eq(9606)&limit=2&format=json&dataPortal=ena`);
-    const searchData = await searchRes.json();
+      const parts = data.candidates[0].content.parts;
+      const toolCalls = parts.filter(p => p.functionCall);
 
-    document.getElementById('raw-search').textContent = JSON.stringify(searchData[0], null, 2).slice(0, 300) + '...';
-    document.getElementById('norm-search').textContent = JSON.stringify({
-      tool: "search_ena",
-      query: "tax_eq(9606)",
-      result_type: "sample",
-      records: searchData.map(r => ({
-        accession: r.sample_accession || r.accession,
-        description: r.description || r.scientific_name || "N/A",
-        tax_id: r.tax_id
-      }))
-    }, null, 2);
+      if (!toolCalls.length) {
+        const text = parts.map(p => p.text || "").join("");
+        answerDiv.textContent = text;
+        break;
+      }
 
-    document.getElementById('norm-result').style.display = 'block';
+      contents.push({"role": "model", "parts": parts});
+      const toolResults = [];
+
+      for (const part of toolCalls) {
+        const {name, args} = part.functionCall;
+
+        // show tool call in UI
+        const div = document.createElement("div");
+        div.className = "tool-call";
+        div.innerHTML = `<div class="name">→ ${name}</div><div class="args">args: ${JSON.stringify(args)}</div><div class="result">fetching from ENA...</div>`;
+        toolsUsed.appendChild(div);
+
+        const result = await callEnaTool(name, args || {});
+        div.querySelector(".result").textContent = `ENA returned: ${JSON.stringify(result).slice(0, 100)}...`;
+
+        toolResults.push({
+          "functionResponse": {
+            "name": name,
+            "response": {"result": JSON.stringify(result)}
+          }
+        });
+      }
+
+      contents.push({"role": "user", "parts": toolResults});
+    }
   } catch(e) {
-    alert('Error: ' + e.message);
+    answerDiv.innerHTML = `<span class="error">Error: ${e.message}</span>`;
   }
 
   btn.disabled = false;
-  btn.textContent = 'Refresh Normalization Demo';
+  btn.textContent = "Ask Gemini";
 }
-
-selectTool('search');
 </script>
 </body>
 </html>
