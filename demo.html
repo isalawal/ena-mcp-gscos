@@ -3,200 +3,109 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ENA MCP Server — Live Demo</title>
+<title>ENA MCP Server</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: sans-serif; background: #0f1117; color: #d4d4d4; min-height: 100vh; padding: 20px; }
-.container { max-width: 700px; margin: 0 auto; }
-h1 { color: #4a90d9; font-size: 22px; margin-bottom: 6px; }
-p.sub { color: #888; font-size: 12px; margin-bottom: 24px; }
-label { display: block; color: #aaa; font-size: 12px; margin-bottom: 6px; margin-top: 14px; }
-textarea { width: 100%; padding: 12px; background: #1e1e2e; border: 1px solid #333; border-radius: 6px; color: #d4d4d4; font-size: 14px; resize: vertical; min-height: 80px; }
-button { width: 100%; padding: 12px; background: #4a90d9; border: none; border-radius: 6px; color: white; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 14px; }
-button:hover { background: #357abd; }
-button:disabled { background: #333; cursor: not-allowed; }
-.response { margin-top: 20px; background: #1e1e2e; border: 1px solid #2a2a4e; border-radius: 8px; padding: 16px; display: none; }
-.response h3 { color: #2ecc71; font-size: 12px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
-.tools-used { margin-bottom: 12px; }
-.tool-call { background: #0f1117; border-left: 3px solid #9b59b6; padding: 8px 12px; margin-bottom: 6px; border-radius: 3px; font-size: 11px; }
-.tool-call .name { color: #9b59b6; font-weight: bold; }
-.tool-call .args { color: #666; margin-top: 3px; }
-.tool-call .result { color: #7dbb7d; margin-top: 3px; }
-.answer { background: #0f1117; border-left: 3px solid #2ecc71; padding: 12px; border-radius: 3px; color: #d4d4d4; font-size: 14px; line-height: 1.7; white-space: pre-wrap; }
-.error { color: #e74c3c; font-size: 13px; }
-.tag { display: inline-block; background: #1a1a2e; border: 1px solid #333; border-radius: 4px; padding: 2px 8px; font-size: 11px; color: #9b59b6; margin-right: 6px; margin-bottom: 16px; }
+body { font-family: sans-serif; background: #0f1117; color: #d4d4d4; padding: 20px; }
+h1 { color: #4a90d9; margin-bottom: 8px; }
+p { color: #888; font-size: 13px; margin-bottom: 20px; }
+textarea { width: 100%; padding: 12px; background: #1e1e2e; border: 1px solid #444; border-radius: 6px; color: #d4d4d4; font-size: 14px; height: 80px; }
+button { display: block; width: 100%; padding: 12px; background: #4a90d9; border: none; border-radius: 6px; color: white; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 12px; }
+#output { margin-top: 20px; background: #1e1e2e; border: 1px solid #333; border-radius: 8px; padding: 16px; display: none; white-space: pre-wrap; font-size: 13px; line-height: 1.7; }
+.tool { color: #9b59b6; font-size: 12px; margin-bottom: 4px; }
+.answer { color: #d4d4d4; margin-top: 12px; }
+.error { color: #e74c3c; }
 </style>
 </head>
 <body>
-<div class="container">
+<h1>ENA MCP Server</h1>
+<p>Ask Gemini anything about genomic data. It queries real ENA data through MCP tools.</p>
 
-  <h1>ENA MCP Server</h1>
-  <p class="sub">Ask Gemini a question about genomic data. It will call your ENA MCP tools to get real verified answers.</p>
-
-  <span class="tag">Powered by Gemini</span>
-  <span class="tag">Real ENA data</span>
-  <span class="tag">No hallucinations</span>
-
-  
-
-  <label>Ask a question</label>
-  <textarea id="question" placeholder="e.g. How many human sequencing runs are in ENA?&#10;e.g. Find me 3 human samples&#10;e.g. What types of data are available in ENA?">How many human sequencing runs are in ENA?</textarea>
-
-  <button id="btn" onclick="ask()">Ask Gemini</button>
-
-  <div class="response" id="response">
-    <h3>Response</h3>
-    <div class="tools-used" id="tools_used"></div>
-    <div class="answer" id="answer"></div>
-  </div>
-
-</div>
+<textarea id="q">How many human sequencing runs are in ENA?</textarea>
+<button onclick="ask()">Ask Gemini</button>
+<div id="output"></div>
 
 <script>
+const KEY = "AIzaSyAgzD1K_OW2JZiYiyJgcczXAAhVPdQmiuo";
 const BASE = "https://www.ebi.ac.uk/ena/portal/api";
 
-const tools = [{
-  "functionDeclarations": [
-    {
-      "name": "search_ena",
-      "description": "Search the European Nucleotide Archive for real genomic records.",
-      "parameters": {
-        "type": "OBJECT",
-        "properties": {
-          "query": {"type": "STRING", "description": "ENA query e.g. tax_eq(9606) for human"},
-          "result_type": {"type": "STRING", "description": "sample, read_run, or study"},
-          "limit": {"type": "INTEGER", "description": "number of results to return"}
-        },
-        "required": ["query"]
-      }
-    },
-    {
-      "name": "count_ena",
-      "description": "Count how many records in ENA match a query.",
-      "parameters": {
-        "type": "OBJECT",
-        "properties": {
-          "query": {"type": "STRING", "description": "ENA query string"},
-          "result_type": {"type": "STRING", "description": "sample, read_run, or study"}
-        },
-        "required": ["query"]
-      }
-    },
-    {
-      "name": "get_result_types",
-      "description": "Get all available data types in ENA.",
-      "parameters": {
-        "type": "OBJECT",
-        "properties": {
-          "placeholder": {"type": "STRING", "description": "not used"}
-        }
-      }
-    },
-    {
-      "name": "get_searchable_fields",
-      "description": "Get all fields that can be searched for a given ENA result type.",
-      "parameters": {
-        "type": "OBJECT",
-        "properties": {
-          "result_type": {"type": "STRING", "description": "sample, read_run, or study"}
-        }
-      }
+async function callTool(name, args) {
+  try {
+    if (name === "search_ena") {
+      const r = await fetch(BASE + "/search?result=" + (args.result_type||"sample") + "&query=" + encodeURIComponent(args.query) + "&limit=" + (args.limit||5) + "&format=json&dataPortal=ena");
+      return await r.json();
     }
-  ]
-}];
-
-async function callEnaTool(name, args) {
-  if (name === "search_ena") {
-    const r = await fetch(`${BASE}/search?result=${args.result_type||"sample"}&query=${encodeURIComponent(args.query)}&limit=${args.limit||5}&format=json&dataPortal=ena`);
-    return await r.json();
-  } else if (name === "count_ena") {
-    const r = await fetch(`${BASE}/count?result=${args.result_type||"read_run"}&query=${encodeURIComponent(args.query)}&dataPortal=ena`);
-    const text = await r.text();
-    const number = parseInt(text.trim().split("\n").pop().trim());
-    return {count: number, formatted: number.toLocaleString()};
-  } else if (name === "get_result_types") {
-    const r = await fetch(`${BASE}/results?dataPortal=ena&format=json`);
-    return await r.json();
-  } else if (name === "get_searchable_fields") {
-    const r = await fetch(`${BASE}/searchFields?result=${args.result_type||"sample"}&dataPortal=ena&format=json`);
-    return await r.json();
-  }
+    if (name === "count_ena") {
+      const r = await fetch(BASE + "/count?result=" + (args.result_type||"read_run") + "&query=" + encodeURIComponent(args.query) + "&dataPortal=ena");
+      const t = await r.text();
+      const n = parseInt(t.trim().split("\n").pop());
+      return {count: n, formatted: n.toLocaleString()};
+    }
+    if (name === "get_result_types") {
+      const r = await fetch(BASE + "/results?dataPortal=ena&format=json");
+      return await r.json();
+    }
+    if (name === "get_searchable_fields") {
+      const r = await fetch(BASE + "/searchFields?result=" + (args.result_type||"sample") + "&dataPortal=ena&format=json");
+      return await r.json();
+    }
+  } catch(e) { return {error: e.message}; }
   return {error: "unknown tool"};
 }
 
 async function ask() {
-  const apikey = document.getElementById("apikey").value.trim();
-  const question = document.getElementById("question").value.trim();
-  const btn = document.getElementById("btn");
-  const responseDiv = document.getElementById("response");
-  const toolsUsed = document.getElementById("tools_used");
-  const answerDiv = document.getElementById("answer");
+  const q = document.getElementById("q").value.trim();
+  if (!q) return;
+  const out = document.getElementById("output");
+  out.style.display = "block";
+  out.innerHTML = "Thinking...";
 
-  if (!question) { alert("Please enter a question"); return; }
+  const tools = [{functionDeclarations: [
+    {name:"search_ena", description:"Search ENA for genomic records.", parameters:{type:"OBJECT", properties:{query:{type:"STRING"}, result_type:{type:"STRING"}, limit:{type:"INTEGER"}}, required:["query"]}},
+    {name:"count_ena", description:"Count ENA records matching a query.", parameters:{type:"OBJECT", properties:{query:{type:"STRING"}, result_type:{type:"STRING"}}, required:["query"]}},
+    {name:"get_result_types", description:"Get all data types in ENA.", parameters:{type:"OBJECT", properties:{placeholder:{type:"STRING"}}}},
+    {name:"get_searchable_fields", description:"Get searchable fields for a result type.", parameters:{type:"OBJECT", properties:{result_type:{type:"STRING"}}}}
+  ]}];
 
-  btn.disabled = true;
-  btn.textContent = "Gemini is thinking...";
-  responseDiv.style.display = "block";
-  toolsUsed.innerHTML = "";
-  answerDiv.innerHTML = "Calling Gemini...";
-
-  const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyAgzD1K_OW2JZiYiyJgcczXAAhVPdQmiuo`;
-  const contents = [{"role": "user", "parts": [{"text": question}]}];
+  const contents = [{role:"user", parts:[{text:q}]}];
+  const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + KEY;
+  let html = "";
 
   try {
-    while (true) {
-      const res = await fetch(GEMINI_URL, {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({contents, tools})
-      });
+    for (let i = 0; i < 5; i++) {
+      const res = await fetch(url, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({contents, tools})});
       const data = await res.json();
 
       if (data.error) {
-        answerDiv.innerHTML = `<span class="error">Gemini error: ${data.error.message}</span>`;
-        break;
+        out.innerHTML = '<span class="error">Error: ' + data.error.message + '</span>';
+        return;
       }
 
       const parts = data.candidates[0].content.parts;
-      const toolCalls = parts.filter(p => p.functionCall);
+      const calls = parts.filter(p => p.functionCall);
 
-      if (!toolCalls.length) {
-        const text = parts.map(p => p.text || "").join("");
-        answerDiv.textContent = text;
-        break;
+      if (!calls.length) {
+        const text = parts.map(p => p.text||"").join("");
+        out.innerHTML = html + '<div class="answer">' + text + '</div>';
+        return;
       }
 
-      contents.push({"role": "model", "parts": parts});
-      const toolResults = [];
+      contents.push({role:"model", parts});
+      const results = [];
 
-      for (const part of toolCalls) {
-        const {name, args} = part.functionCall;
-
-        // show tool call in UI
-        const div = document.createElement("div");
-        div.className = "tool-call";
-        div.innerHTML = `<div class="name">→ ${name}</div><div class="args">args: ${JSON.stringify(args)}</div><div class="result">fetching from ENA...</div>`;
-        toolsUsed.appendChild(div);
-
-        const result = await callEnaTool(name, args || {});
-        div.querySelector(".result").textContent = `ENA returned: ${JSON.stringify(result).slice(0, 100)}...`;
-
-        toolResults.push({
-          "functionResponse": {
-            "name": name,
-            "response": {"result": JSON.stringify(result)}
-          }
-        });
+      for (const p of calls) {
+        const {name, args} = p.functionCall;
+        html += '<div class="tool">→ calling ' + name + '(' + JSON.stringify(args) + ')</div>';
+        out.innerHTML = html + "fetching from ENA...";
+        const result = await callTool(name, args||{});
+        html += '<div class="tool" style="color:#2ecc71">✓ ENA returned ' + JSON.stringify(result).slice(0,80) + '...</div>';
+        results.push({functionResponse:{name, response:{result:JSON.stringify(result)}}});
       }
 
-      contents.push({"role": "user", "parts": toolResults});
+      contents.push({role:"user", parts:results});
     }
   } catch(e) {
-    answerDiv.innerHTML = `<span class="error">Error: ${e.message}</span>`;
+    out.innerHTML = '<span class="error">Error: ' + e.message + '</span>';
   }
-
-  btn.disabled = false;
-  btn.textContent = "Ask Gemini";
 }
 </script>
 </body>
