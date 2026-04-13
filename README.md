@@ -8,6 +8,10 @@ Built as a GSoC 2026 proof of concept for EMBL-EBI.
 
 Try it here: https://isalawal.github.io/ena-mcp-gscos/demo.html
 
+Get a free Gemini API key in 2 minutes at https://aistudio.google.com - no credit card required.
+
+Try it here: https://isalawal.github.io/ena-mcp-gscos/demo.html
+
 
 
 ![ENA MCP Server Demo](SmartSelect_20260412-182427_Chrome.jpg)
